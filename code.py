@@ -1,5 +1,6 @@
-import telebot
-from flask import Flask, request
+from telegram import Update
+from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, filters, ContextTypes
+
 # بارگذاری توکن از فایل .env
 load_dotenv()
 BOT_TOKEN = os.getenv("7603187249:AAHSgDa9m0BySOtvnj66navgyLmYbkvzIRI")
