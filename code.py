@@ -1,5 +1,6 @@
 import os
-from telegram import Update
+import telebot
+from flask import Flask, request
 from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, filters, ContextTypes
 from dotenv import load_dotenv
 
