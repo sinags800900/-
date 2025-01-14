@@ -4,19 +4,19 @@ from telegram.ext import ApplicationBuilder, CommandHandler, CallbackQueryHandle
 # توکن بات خود را در اینجا جایگذاری کنید
 BOT_TOKEN = '7603187249:AAHSgDa9m0BySOtvnj66navgyLmYbkvzIRI'
 
-def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """ارسال پیام خوشامدگویی و دکمه‌های بازی"""
     keyboard = [
         [InlineKeyboardButton("شروع بازی", callback_data='start_game')],
         [InlineKeyboardButton("درباره بازی", callback_data='about_game')]
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
-    update.message.reply_text(
+    await update.message.reply_text(
         text="سلام! به بازی تلگرام خوش آمدید. از دکمه‌های زیر استفاده کنید.",
         reply_markup=reply_markup
     )
 
-def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
+async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """مدیریت کلیک روی دکمه‌ها"""
     query = update.callback_query
     await query.answer()
