@@ -1,59 +1,63 @@
-from telegram import Update
-from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, filters, ContextTypes
+from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
+from telegram.ext import ApplicationBuilder, CommandHandler, CallbackQueryHandler, ContextTypes
 
-# بارگذاری توکن از فایل .env
-load_dotenv()
-BOT_TOKEN = os.getenv("7603187249:AAHSgDa9m0BySOtvnj66navgyLmYbkvzIRI")
+# توکن بات خود را در اینجا جایگذاری کنید
+BOT_TOKEN = '7603187249:AAHSgDa9m0BySOtvnj66navgyLmYbkvzIRI'
 
-# لیست شماره‌ها
-phone_numbers = []
-
-async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    """پیغام خوش‌آمدگویی به کاربر"""
-    await update.message.reply_text(
-        "سلام! لطفاً شماره‌های خود را یکی یکی ارسال کنید. برای ارسال پیام به همه شماره‌ها، دستور /send را وارد کنید."
+def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """ارسال پیام خوشامدگویی و دکمه‌های بازی"""
+    keyboard = [
+        [InlineKeyboardButton("شروع بازی", callback_data='start_game')],
+        [InlineKeyboardButton("درباره بازی", callback_data='about_game')]
+    ]
+    reply_markup = InlineKeyboardMarkup(keyboard)
+    update.message.reply_text(
+        text="سلام! به بازی تلگرام خوش آمدید. از دکمه‌های زیر استفاده کنید.",
+        reply_markup=reply_markup
     )
 
-async def get_phone_number(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    """دریافت شماره از کاربر"""
-    global phone_numbers
-    phone = update.message.text.strip()
-    
-    if len(phone_numbers) >= 500:
-        await update.message.reply_text("حداکثر تعداد شماره‌ها (500) ثبت شده است.")
-        return
-    
-    if phone.isdigit() and len(phone) >= 10:  # بررسی فرمت شماره
-        phone_numbers.append(phone)
-        await update.message.reply_text(f"شماره {phone} ثبت شد. تعداد شماره‌های ثبت‌شده: {len(phone_numbers)}")
-    else:
-        await update.message.reply_text("لطفاً یک شماره معتبر ارسال کنید.")
+def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """مدیریت کلیک روی دکمه‌ها"""
+    query = update.callback_query
+    await query.answer()
 
-async def send_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    """ارسال پیام به شماره‌ها"""
-    global phone_numbers
-    if not phone_numbers:
-        await update.message.reply_text("هیچ شماره‌ای ثبت نشده است!")
-        return
+    if query.data == 'start_game':
+        await query.edit_message_text(
+            text="بازی شروع شد! اولین سوال: 2 + 2 چند می‌شود؟",
+            reply_markup=InlineKeyboardMarkup([
+                [InlineKeyboardButton("4", callback_data='correct_answer')],
+                [InlineKeyboardButton("5", callback_data='wrong_answer')]
+            ])
+        )
 
-    # متنی که ارسال می‌شود
-    message = "این یک پیام تست است که توسط ربات ارسال شده است."
-    
-    for phone in phone_numbers:
-        # فرضی: ارسال پیام به شماره‌ها از طریق سرویس دیگر (API یا سرویس پیامک)
-        print(f"ارسال پیام به {phone}: {message}")
+    elif query.data == 'about_game':
+        await query.edit_message_text(
+            text="این یک بازی ساده است که با سوال و جواب کار می‌کند. لذت ببرید!"
+        )
 
-    await update.message.reply_text(f"پیام برای {len(phone_numbers)} شماره ارسال شد!")
-    phone_numbers = []  # پاک کردن لیست شماره‌ها پس از ارسال
+    elif query.data == 'correct_answer':
+        await query.edit_message_text(
+            text="آفرین! درست جواب دادی. سوال بعدی: 3 * 3 چند می‌شود؟",
+            reply_markup=InlineKeyboardMarkup([
+                [InlineKeyboardButton("9", callback_data='correct_next')],
+                [InlineKeyboardButton("6", callback_data='wrong_next')]
+            ])
+        )
 
-# تنظیمات ربات
-app = ApplicationBuilder().token(BOT_TOKEN).build()
+    elif query.data == 'wrong_answer':
+        await query.edit_message_text(text="اشتباه جواب دادی! دوباره امتحان کن.")
 
-# هندلرها
-app.add_handler(CommandHandler("start", start))
-app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, get_phone_number))
-app.add_handler(CommandHandler("send", send_message))
+    elif query.data == 'correct_next':
+        await query.edit_message_text(text="تبریک! بازی به پایان رسید.")
 
-if __name__ == "__main__":
-    print("ربات در حال اجراست...")
+    elif query.data == 'wrong_next':
+        await query.edit_message_text(text="اشتباه جواب دادی! بازی تمام شد.")
+
+if __name__ == '__main__':
+    app = ApplicationBuilder().token(BOT_TOKEN).build()
+
+    app.add_handler(CommandHandler('start', start))
+    app.add_handler(CallbackQueryHandler(button_handler))
+
+    print("Bot is running...")
     app.run_polling()
